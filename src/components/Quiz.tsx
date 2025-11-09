@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import quizDataRaw from "../data.json";
 import { QuizData } from "../types";
+import { useTimer } from "../hooks/useTimer";
+import { saveQuizResult } from "../utils/localStorage";
 import { validateQuizData, ValidationError } from "../utils/validation";
 import Question from "./Question";
+import QuizHistory from "./QuizHistory";
 import "./Quiz.css";
 
 let quizData: QuizData = [];
@@ -26,12 +29,73 @@ export default function Quiz() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
   const [showScore, setShowScore] = useState<boolean>(false);
+  const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const currentQuestionIndexRef = useRef<number>(0);
+
+  const {
+    time,
+    formattedTime,
+    reset: resetTimer,
+  } = useTimer(!showScore && quizStartTime !== null);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentQuestionIndexRef.current = currentQuestionIndex;
+  }, [currentQuestionIndex]);
+
+  const onSelectOption = useCallback((selectedOption: string) => {
+    const index = currentQuestionIndexRef.current;
+    const currentQuestion = quizData[index];
+    if (!currentQuestion) {
+      console.error("Current question is undefined");
+      return;
+    }
+
+    const isCorrect = selectedOption === currentQuestion.correctAnswer;
+    if (isCorrect) {
+      setScore((prev) => prev + 1);
+    }
+
+    setCurrentQuestionIndex((prev) => {
+      const nextQuestionIndex = prev + 1;
+      if (nextQuestionIndex < quizData.length) {
+        return nextQuestionIndex;
+      } else {
+        setShowScore(true);
+        return prev;
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (quizData.length === 0 && validationError) {
       console.error("Quiz data is invalid:", validationError);
     }
   }, []);
+
+  useEffect(() => {
+    if (!showScore && quizStartTime === null) {
+      setQuizStartTime(Date.now());
+      resetTimer();
+    }
+  }, [showScore, quizStartTime, resetTimer]);
+
+  // Save result when quiz is completed
+  useEffect(() => {
+    if (showScore && quizStartTime !== null && quizData.length > 0) {
+      const currentQuestion = quizData[quizData.length - 1];
+      const result = {
+        score,
+        total: quizData.length,
+        category: currentQuestion?.category,
+        difficulty: currentQuestion?.difficulty,
+        timeTaken: time,
+        date: new Date().toISOString(),
+      };
+      saveQuizResult(result);
+    }
+  }, [showScore, score, time, quizStartTime]);
 
   if (validationError || quizData.length === 0) {
     return (
@@ -45,32 +109,13 @@ export default function Quiz() {
     );
   }
 
-  function onSelectOption(selectedOption: string) {
-    const currentQuestion = quizData[currentQuestionIndex];
-    if (!currentQuestion) {
-      console.error("Current question is undefined");
-      return;
-    }
-
-    if (selectedOption === currentQuestion.correctAnswer) {
-      setScore((prev) => prev + 1);
-    }
-
-    setCurrentQuestionIndex((prev) => {
-      const nextQuestionIndex = prev + 1;
-      if (nextQuestionIndex < quizData.length) {
-        return nextQuestionIndex;
-      } else {
-        setShowScore(true);
-        return prev;
-      }
-    });
-  }
-
   function restartQuiz() {
     setCurrentQuestionIndex(0);
+    currentQuestionIndexRef.current = 0;
     setScore(0);
     setShowScore(false);
+    setQuizStartTime(null);
+    resetTimer();
   }
 
   const currentQuestion = quizData[currentQuestionIndex];
@@ -107,30 +152,60 @@ export default function Quiz() {
           <h1>
             Your Score: {score} from {quizData.length}
           </h1>
-          <button
-            className="quiz-restart-button"
-            onClick={restartQuiz}
-            aria-label="Restart quiz and start over"
-          >
-            Restart Quiz
-          </button>
+          <div className="quiz-stats">
+            <p className="quiz-stat">
+              <span className="stat-label">Time:</span> {formattedTime}
+            </p>
+            <p className="quiz-stat">
+              <span className="stat-label">Accuracy:</span>{" "}
+              {quizData.length > 0
+                ? Math.round((score / quizData.length) * 100)
+                : 0}
+              %
+            </p>
+          </div>
+          <div className="quiz-score-actions">
+            <button
+              className="quiz-history-button"
+              onClick={() => setShowHistory(true)}
+              aria-label="View quiz history"
+            >
+              View History
+            </button>
+            <button
+              className="quiz-restart-button"
+              onClick={restartQuiz}
+              aria-label="Restart quiz and start over"
+            >
+              Restart Quiz
+            </button>
+          </div>
         </section>
       ) : (
         <section aria-label="Quiz Questions">
           <header className="quiz-header">
-            <div
-              className="progress-info"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <span
-                id="progress-text"
-                aria-label={`Question ${currentQuestionIndex + 1} of ${
-                  quizData.length
-                }`}
+            <div className="quiz-header-top">
+              <div
+                className="progress-info"
+                aria-live="polite"
+                aria-atomic="true"
               >
-                Question {currentQuestionIndex + 1} of {quizData.length}
-              </span>
+                <span
+                  id="progress-text"
+                  aria-label={`Question ${currentQuestionIndex + 1} of ${
+                    quizData.length
+                  }`}
+                >
+                  Question {currentQuestionIndex + 1} of {quizData.length}
+                </span>
+              </div>
+              <div
+                className="timer-info"
+                aria-label={`Time elapsed: ${formattedTime}`}
+              >
+                <span className="timer-icon">⏱</span>
+                <span>{formattedTime}</span>
+              </div>
             </div>
             <div
               className="progress-bar-container"
@@ -157,6 +232,7 @@ export default function Quiz() {
           />
         </section>
       )}
+      {showHistory && <QuizHistory onClose={() => setShowHistory(false)} />}
     </main>
   );
 }
