@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 import quizDataRaw from "../data.json";
 import { QuizData } from "../types";
@@ -97,6 +97,43 @@ export default function Quiz() {
     }
   }, [showScore, score, time, quizStartTime]);
 
+  // Memoized values (must be before conditional returns)
+  const currentQuestion = useMemo(
+    () => (quizData.length > 0 ? quizData[currentQuestionIndex] : undefined),
+    [currentQuestionIndex]
+  );
+
+  const progress = useMemo(
+    () =>
+      quizData.length > 0
+        ? ((currentQuestionIndex + 1) / quizData.length) * 100
+        : 0,
+    [currentQuestionIndex]
+  );
+
+  const accuracy = useMemo(
+    () =>
+      quizData.length > 0 ? Math.round((score / quizData.length) * 100) : 0,
+    [score]
+  );
+
+  const handleCloseHistory = useCallback(() => {
+    setShowHistory(false);
+  }, []);
+
+  const handleShowHistory = useCallback(() => {
+    setShowHistory(true);
+  }, []);
+
+  const restartQuiz = useCallback(() => {
+    setCurrentQuestionIndex(0);
+    currentQuestionIndexRef.current = 0;
+    setScore(0);
+    setShowScore(false);
+    setQuizStartTime(null);
+    resetTimer();
+  }, [resetTimer]);
+
   if (validationError || quizData.length === 0) {
     return (
       <div className="quiz-error">
@@ -108,17 +145,6 @@ export default function Quiz() {
       </div>
     );
   }
-
-  function restartQuiz() {
-    setCurrentQuestionIndex(0);
-    currentQuestionIndexRef.current = 0;
-    setScore(0);
-    setShowScore(false);
-    setQuizStartTime(null);
-    resetTimer();
-  }
-
-  const currentQuestion = quizData[currentQuestionIndex];
 
   if (!currentQuestion) {
     return (
@@ -138,8 +164,6 @@ export default function Quiz() {
     );
   }
 
-  const progress = ((currentQuestionIndex + 1) / quizData.length) * 100;
-
   return (
     <main>
       {showScore ? (
@@ -157,17 +181,13 @@ export default function Quiz() {
               <span className="stat-label">Time:</span> {formattedTime}
             </p>
             <p className="quiz-stat">
-              <span className="stat-label">Accuracy:</span>{" "}
-              {quizData.length > 0
-                ? Math.round((score / quizData.length) * 100)
-                : 0}
-              %
+              <span className="stat-label">Accuracy:</span> {accuracy}%
             </p>
           </div>
           <div className="quiz-score-actions">
             <button
               className="quiz-history-button"
-              onClick={() => setShowHistory(true)}
+              onClick={handleShowHistory}
               aria-label="View quiz history"
             >
               View History
@@ -232,7 +252,7 @@ export default function Quiz() {
           />
         </section>
       )}
-      {showHistory && <QuizHistory onClose={() => setShowHistory(false)} />}
+      {showHistory && <QuizHistory onClose={handleCloseHistory} />}
     </main>
   );
 }

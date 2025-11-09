@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { QuizResult } from "../types";
 import { getQuizResults } from "../utils/localStorage";
 import "./QuizHistory.css";
@@ -6,7 +8,7 @@ interface QuizHistoryProps {
   onClose: () => void;
 }
 
-export default function QuizHistory({ onClose }: QuizHistoryProps) {
+const QuizHistory = memo(function QuizHistory({ onClose }: QuizHistoryProps) {
   const results = getQuizResults();
 
   function formatDate(dateString: string): string {
@@ -62,8 +64,10 @@ export default function QuizHistory({ onClose }: QuizHistoryProps) {
         <div className="quiz-history-list">
           {results.map((result: QuizResult, index: number) => {
             const accuracy = Math.round((result.score / result.total) * 100);
+            // Use date + index as unique key since date is ISO string
+            const uniqueKey = `${result.date}-${index}`;
             return (
-              <div key={index} className="quiz-history-item">
+              <div key={uniqueKey} className="quiz-history-item">
                 <div className="quiz-history-item-header">
                   <span className="quiz-history-date">
                     {formatDate(result.date)}
@@ -104,4 +108,6 @@ export default function QuizHistory({ onClose }: QuizHistoryProps) {
       </div>
     </div>
   );
-}
+});
+
+export default QuizHistory;
