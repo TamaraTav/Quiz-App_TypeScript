@@ -38,39 +38,67 @@ export default function Quiz() {
   const progress = ((currentQuestionIndex + 1) / quizData.length) * 100;
 
   return (
-    <div>
+    <main>
       {showScore ? (
-        <div className="quiz-score">
+        <section
+          className="quiz-score"
+          aria-live="polite"
+          aria-atomic="true"
+          aria-label="Quiz Results"
+        >
           <h1>
             Your Score: {score} from {quizData.length}
           </h1>
-          <button className="quiz-restart-button" onClick={restartQuiz}>
+          <button
+            className="quiz-restart-button"
+            onClick={restartQuiz}
+            aria-label="Restart quiz and start over"
+          >
             Restart Quiz
           </button>
-        </div>
+        </section>
       ) : (
-        <div>
-          <div className="quiz-header">
-            <div className="progress-info">
-              <span>
+        <section aria-label="Quiz Questions">
+          <header className="quiz-header">
+            <div
+              className="progress-info"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span
+                id="progress-text"
+                aria-label={`Question ${currentQuestionIndex + 1} of ${
+                  quizData.length
+                }`}
+              >
                 Question {currentQuestionIndex + 1} of {quizData.length}
               </span>
             </div>
-            <div className="progress-bar-container">
+            <div
+              className="progress-bar-container"
+              role="progressbar"
+              aria-valuenow={currentQuestionIndex + 1}
+              aria-valuemin={0}
+              aria-valuemax={quizData.length}
+              aria-labelledby="progress-text"
+              aria-label={`Progress: ${Math.round(progress)}% complete`}
+            >
               <div
                 className="progress-bar"
                 style={{ width: `${progress}%` }}
+                aria-hidden="true"
               ></div>
             </div>
-          </div>
+          </header>
           <Question
             question={currentQuestion?.question}
             options={currentQuestion?.options}
             correctAnswer={currentQuestion?.correctAnswer}
             onSelectOption={onSelectOption}
+            questionNumber={currentQuestionIndex + 1}
           />
-        </div>
+        </section>
       )}
-    </div>
+    </main>
   );
 }

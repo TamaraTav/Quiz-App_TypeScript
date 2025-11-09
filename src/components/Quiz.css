@@ -50,3 +50,17 @@
 .quiz-restart-button:hover {
   background-color: #21a1f1;
 }
+
+.quiz-restart-button:focus {
+  outline: 3px solid #61dafb;
+  outline-offset: 2px;
+}
+
+.quiz-restart-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.quiz-restart-button:focus-visible {
+  outline: 3px solid #61dafb;
+  outline-offset: 2px;
+}

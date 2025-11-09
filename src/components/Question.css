@@ -40,6 +40,22 @@
   transform: translateX(5px);
 }
 
+.option-button:focus {
+  outline: 3px solid #61dafb;
+  outline-offset: 2px;
+}
+
+.option-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.option-button:focus-visible {
+  outline: 3px solid #61dafb;
+  outline-offset: 2px;
+  background-color: #4a4f5b;
+  border-color: #61dafb;
+}
+
 .option-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
@@ -91,4 +107,3 @@
     transform: translateY(0);
   }
 }
-

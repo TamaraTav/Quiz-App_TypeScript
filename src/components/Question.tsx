@@ -8,6 +8,7 @@ type TQuestionProps = {
   options: QuestionType["options"];
   correctAnswer: QuestionType["correctAnswer"];
   onSelectOption: (selectedOption: string) => void;
+  questionNumber: number;
 };
 
 const Question: React.FC<TQuestionProps> = ({
@@ -15,6 +16,7 @@ const Question: React.FC<TQuestionProps> = ({
   options,
   correctAnswer,
   onSelectOption,
+  questionNumber,
 }) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
@@ -43,41 +45,83 @@ const Question: React.FC<TQuestionProps> = ({
     return "";
   }
 
+  const questionId = `question-${questionNumber}`;
+
   return (
-    <div className="question-container">
-      <h2>{question}</h2>
-      <div className="options-container">
-        {options.map((option) => (
-          <button
-            key={option}
-            className={`option-button ${getOptionClassName(option)}`}
-            onClick={() => handleOptionClick(option)}
-            disabled={isAnswered}
-          >
-            {option}
-            {isAnswered && option === correctAnswer && (
-              <span className="feedback-icon">✓</span>
-            )}
-            {isAnswered &&
-              option === selectedOption &&
-              option !== correctAnswer && (
-                <span className="feedback-icon">✗</span>
+    <article
+      className="question-container"
+      aria-labelledby={questionId}
+      role="region"
+    >
+      <h2 id={questionId}>{question}</h2>
+      <div
+        className="options-container"
+        role="radiogroup"
+        aria-labelledby={questionId}
+        aria-describedby={isAnswered ? `feedback-${questionNumber}` : undefined}
+      >
+        {options.map((option, index) => {
+          const optionId = `option-${questionNumber}-${index}`;
+          const isSelected = selectedOption === option;
+          const isCorrect = option === correctAnswer;
+          const isIncorrect = isSelected && !isCorrect && isAnswered;
+
+          return (
+            <button
+              key={option}
+              id={optionId}
+              className={`option-button ${getOptionClassName(option)}`}
+              onClick={() => handleOptionClick(option)}
+              disabled={isAnswered}
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={`${option}${
+                isAnswered
+                  ? isCorrect
+                    ? ", correct answer"
+                    : isIncorrect
+                    ? ", incorrect answer"
+                    : ""
+                  : ""
+              }`}
+              aria-disabled={isAnswered}
+            >
+              <span>{option}</span>
+              {isAnswered && isCorrect && (
+                <span className="feedback-icon" aria-hidden="true">
+                  ✓
+                </span>
               )}
-          </button>
-        ))}
+              {isAnswered && isIncorrect && (
+                <span className="feedback-icon" aria-hidden="true">
+                  ✗
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
       {isAnswered && (
-        <div className="feedback-message">
+        <div
+          id={`feedback-${questionNumber}`}
+          className="feedback-message"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {selectedOption === correctAnswer ? (
-            <span className="feedback-correct">Correct! ✓</span>
+            <span className="feedback-correct" aria-label="Correct answer">
+              Correct! ✓
+            </span>
           ) : (
             <span className="feedback-incorrect">
-              Incorrect. The correct answer is: {correctAnswer}
+              <span aria-label="Incorrect answer">Incorrect.</span> The correct
+              answer is: <strong>{correctAnswer}</strong>
             </span>
           )}
         </div>
       )}
-    </div>
+    </article>
   );
 };
 
