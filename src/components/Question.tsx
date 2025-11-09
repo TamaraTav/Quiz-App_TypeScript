@@ -65,10 +65,12 @@ const Question: React.FC<TQuestionProps> = ({
           const isSelected = selectedOption === option;
           const isCorrect = option === correctAnswer;
           const isIncorrect = isSelected && !isCorrect && isAnswered;
+          // Unique key combining questionNumber and index to avoid conflicts
+          const uniqueKey = `${questionNumber}-${index}`;
 
           return (
             <button
-              key={option}
+              key={uniqueKey}
               id={optionId}
               className={`option-button ${getOptionClassName(option)}`}
               onClick={() => handleOptionClick(option)}
