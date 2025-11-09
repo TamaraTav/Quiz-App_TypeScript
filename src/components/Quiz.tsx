@@ -13,23 +13,35 @@ export default function Quiz() {
 
   function onSelectOption(selectedOption: string) {
     if (selectedOption === quizData[currentQuestionIndex].correctAnswer) {
-      setScore(score + 1);
+      setScore((prev) => prev + 1);
     }
 
-    const nextQuestionIndex = currentQuestionIndex + 1;
-    if (nextQuestionIndex < quizData.length) {
-      setCurrentQuestionIndex(nextQuestionIndex);
-    } else {
-      setShowScore(true);
-    }
+    setCurrentQuestionIndex((prev) => {
+      const nextQuestionIndex = prev + 1;
+      if (nextQuestionIndex < quizData.length) {
+        return nextQuestionIndex;
+      } else {
+        setShowScore(true);
+        return prev;
+      }
+    });
+  }
+
+  function restartQuiz() {
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setShowScore(false);
   }
 
   return (
     <div>
       {showScore ? (
-        <h1>
-          Your Score: {score}/{quizData.length}
-        </h1>
+        <div>
+          <h1>
+            Your Score: {score} from {quizData.length}
+          </h1>
+          <button onClick={restartQuiz}>Restart Quiz</button>
+        </div>
       ) : (
         <Question
           question={quizData[currentQuestionIndex]?.question}
