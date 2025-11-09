@@ -1,19 +1,58 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import quizDataRaw from "../data.json";
 import { QuizData } from "../types";
+import { validateQuizData, ValidationError } from "../utils/validation";
 import Question from "./Question";
 import "./Quiz.css";
 
-const quizData = quizDataRaw as QuizData;
+let quizData: QuizData = [];
+let validationError: string | null = null;
+
+try {
+  validateQuizData(quizDataRaw);
+  quizData = quizDataRaw as QuizData;
+} catch (error) {
+  if (error instanceof ValidationError) {
+    validationError = error.message;
+    console.error("Quiz data validation failed:", error.message);
+  } else {
+    validationError = "Failed to load quiz data";
+    console.error("Unexpected error:", error);
+  }
+}
 
 export default function Quiz() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
   const [showScore, setShowScore] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (quizData.length === 0 && validationError) {
+      console.error("Quiz data is invalid:", validationError);
+    }
+  }, []);
+
+  if (validationError || quizData.length === 0) {
+    return (
+      <div className="quiz-error">
+        <div className="quiz-error-content">
+          <h2>Failed to load quiz</h2>
+          <p>{validationError || "Quiz data is empty or invalid."}</p>
+          <p>Please check the data file and try again.</p>
+        </div>
+      </div>
+    );
+  }
+
   function onSelectOption(selectedOption: string) {
-    if (selectedOption === quizData[currentQuestionIndex].correctAnswer) {
+    const currentQuestion = quizData[currentQuestionIndex];
+    if (!currentQuestion) {
+      console.error("Current question is undefined");
+      return;
+    }
+
+    if (selectedOption === currentQuestion.correctAnswer) {
       setScore((prev) => prev + 1);
     }
 
@@ -35,6 +74,25 @@ export default function Quiz() {
   }
 
   const currentQuestion = quizData[currentQuestionIndex];
+
+  if (!currentQuestion) {
+    return (
+      <div className="quiz-error">
+        <div className="quiz-error-content">
+          <h2>Question not found</h2>
+          <p>The requested question could not be loaded.</p>
+          <button
+            className="quiz-restart-button"
+            onClick={restartQuiz}
+            aria-label="Restart quiz"
+          >
+            Restart Quiz
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const progress = ((currentQuestionIndex + 1) / quizData.length) * 100;
 
   return (

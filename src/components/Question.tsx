@@ -26,15 +26,53 @@ const Question: React.FC<TQuestionProps> = ({
     setIsAnswered(false);
   }, [question]);
 
+  useEffect(() => {
+    if (isAnswered && selectedOption) {
+      const timeoutId = setTimeout(() => {
+        onSelectOption(selectedOption);
+      }, 1500);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isAnswered, selectedOption, onSelectOption]);
+
+  // Validation (after hooks)
+  if (!question || question.trim().length === 0) {
+    return (
+      <div className="question-error">
+        <p>Invalid question: Question text is missing.</p>
+      </div>
+    );
+  }
+
+  if (!options || !Array.isArray(options) || options.length < 2) {
+    return (
+      <div className="question-error">
+        <p>Invalid question: Question must have at least 2 options.</p>
+      </div>
+    );
+  }
+
+  if (!correctAnswer || !options.includes(correctAnswer)) {
+    return (
+      <div className="question-error">
+        <p>
+          Invalid question: Correct answer must be one of the provided options.
+        </p>
+      </div>
+    );
+  }
+
   function handleOptionClick(option: string) {
     if (isAnswered) return;
 
+    if (!option || typeof option !== "string") {
+      console.error("Invalid option selected");
+      return;
+    }
+
     setSelectedOption(option);
     setIsAnswered(true);
-
-    setTimeout(() => {
-      onSelectOption(option);
-    }, 1500);
   }
 
   function getOptionClassName(option: string): string {

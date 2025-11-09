@@ -1,5 +1,6 @@
 import React from "react";
 import "./App.css";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Quiz from "./components/Quiz";
 
 const App: React.FC = () => {
@@ -8,7 +9,9 @@ const App: React.FC = () => {
       <header>
         <h1>Quiz App</h1>
       </header>
-      <Quiz />
+      <ErrorBoundary>
+        <Quiz />
+      </ErrorBoundary>
     </div>
   );
 };
