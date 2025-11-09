@@ -1,7 +1,10 @@
 import { useState } from "react";
 
-import quizData from "../data.json";
+import quizDataRaw from "../data.json";
+import { QuizData } from "../types";
 import Question from "./Question";
+
+const quizData = quizDataRaw as QuizData;
 
 export default function Quiz() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);

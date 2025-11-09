@@ -1,6 +1,8 @@
+import { Question as QuestionType } from "../types";
+
 type TQuestionProps = {
-  question: string;
-  options: string[];
+  question: QuestionType["question"];
+  options: QuestionType["options"];
   onSelectOption: (selectedOption: string) => void;
 };
 
