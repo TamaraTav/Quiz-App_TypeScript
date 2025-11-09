@@ -3,6 +3,7 @@ import { useState } from "react";
 import quizDataRaw from "../data.json";
 import { QuizData } from "../types";
 import Question from "./Question";
+import "./Quiz.css";
 
 const quizData = quizDataRaw as QuizData;
 
@@ -33,21 +34,42 @@ export default function Quiz() {
     setShowScore(false);
   }
 
+  const currentQuestion = quizData[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / quizData.length) * 100;
+
   return (
     <div>
       {showScore ? (
-        <div>
+        <div className="quiz-score">
           <h1>
             Your Score: {score} from {quizData.length}
           </h1>
-          <button onClick={restartQuiz}>Restart Quiz</button>
+          <button className="quiz-restart-button" onClick={restartQuiz}>
+            Restart Quiz
+          </button>
         </div>
       ) : (
-        <Question
-          question={quizData[currentQuestionIndex]?.question}
-          options={quizData[currentQuestionIndex].options}
-          onSelectOption={onSelectOption}
-        />
+        <div>
+          <div className="quiz-header">
+            <div className="progress-info">
+              <span>
+                Question {currentQuestionIndex + 1} of {quizData.length}
+              </span>
+            </div>
+            <div className="progress-bar-container">
+              <div
+                className="progress-bar"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+          <Question
+            question={currentQuestion?.question}
+            options={currentQuestion?.options}
+            correctAnswer={currentQuestion?.correctAnswer}
+            onSelectOption={onSelectOption}
+          />
+        </div>
       )}
     </div>
   );

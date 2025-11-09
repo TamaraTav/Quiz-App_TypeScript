@@ -1,0 +1,52 @@
+/* Quiz Header & Progress Bar */
+.quiz-header {
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 30px;
+}
+
+.progress-info {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #61dafb;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: #3a3f4b;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #61dafb;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+/* Score Display */
+.quiz-score {
+  margin-bottom: 20px;
+}
+
+.quiz-score h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.quiz-restart-button {
+  background-color: #61dafb;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 24px;
+  font-size: 18px;
+  margin: 10px;
+  cursor: pointer;
+  color: white;
+}
+
+.quiz-restart-button:hover {
+  background-color: #21a1f1;
+}
